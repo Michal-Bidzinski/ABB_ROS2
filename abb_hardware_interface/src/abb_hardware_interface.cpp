@@ -30,8 +30,10 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
     return CallbackReturn::ERROR;
   }
 
+  // const auto rws_port = std::stoi(info_.hardware_parameters["rws_port"]);
   const auto rws_port = stoi(info_.hardware_parameters["rws_port"]);
   const auto rws_ip = info_.hardware_parameters["rws_ip"];
+  const auto prefix = info_.hardware_parameters["prefix"];
 
   if (rws_ip == "None")
   {
@@ -42,7 +44,7 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
   // Get robot controller description from RWS
   abb::robot::RWSManager rws_manager(rws_ip, rws_port, "Default User", "robotics");
   const auto robot_controller_description_ =
-      abb::robot::utilities::establishRWSConnection(rws_manager, "IRB1200", true);
+      abb::robot::utilities::establishRWSConnection(rws_manager, prefix, true);
   RCLCPP_INFO_STREAM(LOGGER, "Robot controller description:\n"
                                  << abb::robot::summaryText(robot_controller_description_));
 
@@ -111,6 +113,7 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
   {
     try
     {
+      // const auto egm_port = std::stoi(info_.hardware_parameters[group.name() + "egm_port"]);
       const auto egm_port = stoi(info_.hardware_parameters[group.name() + "egm_port"]);
       const auto channel_configuration =
           abb::robot::EGMManager::ChannelConfiguration{ static_cast<uint16_t>(egm_port), group };
@@ -149,12 +152,10 @@ std::vector<hardware_interface::StateInterface> ABBSystemHardware::export_state_
       {
         // TODO(seng): Consider changing joint names in robot description to match what comes
         // from the ABB robot description to avoid needing to strip the prefix here
-        const auto pos = joint.name.find("joint");
-        const auto joint_name = joint.name.substr(pos);
         state_interfaces.emplace_back(
-            hardware_interface::StateInterface(joint_name, hardware_interface::HW_IF_POSITION, &joint.state.position));
+            hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_POSITION, &joint.state.position));
         state_interfaces.emplace_back(
-            hardware_interface::StateInterface(joint_name, hardware_interface::HW_IF_VELOCITY, &joint.state.velocity));
+            hardware_interface::StateInterface(joint.name, hardware_interface::HW_IF_VELOCITY, &joint.state.velocity));
       }
     }
   }
@@ -172,12 +173,10 @@ std::vector<hardware_interface::CommandInterface> ABBSystemHardware::export_comm
       {
         // TODO(seng): Consider changing joint names in robot description to match what comes
         // from the ABB robot description to avoid needing to strip the prefix here
-        const auto pos = joint.name.find("joint");
-        const auto joint_name = joint.name.substr(pos);
         command_interfaces.emplace_back(hardware_interface::CommandInterface(
-            joint_name, hardware_interface::HW_IF_POSITION, &joint.command.position));
+            joint.name, hardware_interface::HW_IF_POSITION, &joint.command.position));
         command_interfaces.emplace_back(hardware_interface::CommandInterface(
-            joint_name, hardware_interface::HW_IF_VELOCITY, &joint.command.velocity));
+            joint.name, hardware_interface::HW_IF_VELOCITY, &joint.command.velocity));
       }
     }
   }
@@ -210,7 +209,8 @@ CallbackReturn ABBSystemHardware::on_activate(const rclcpp_lifecycle::State& /* 
   egm_manager_->read(motion_data_);
 
   RCLCPP_INFO(LOGGER, "ros2_control hardware interface was successfully started!");
-
+  // return return_type::OK;
+  // }
   return CallbackReturn::SUCCESS;
 }
 

@@ -36,6 +36,8 @@
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
 
+
+// using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -65,6 +67,9 @@ public:
   return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
 private:
+  // HardwareInfo info_;
+  // status status_;
+
   // EGM
   abb::robot::RobotControllerDescription robot_controller_description_;
   std::unique_ptr<abb::robot::EGMManager> egm_manager_;

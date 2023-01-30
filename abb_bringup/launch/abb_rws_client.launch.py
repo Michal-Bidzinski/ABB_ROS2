@@ -16,7 +16,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="None",
+            default_value="192.168.88.200",
             description="IP address to the robot controller's RWS server",
         )
     )
@@ -32,7 +32,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_nickname",
-            default_value="",
+            default_value="ROB_1",
             description="Arbitrary user nickname/identifier for the robot controller",
         )
     )
