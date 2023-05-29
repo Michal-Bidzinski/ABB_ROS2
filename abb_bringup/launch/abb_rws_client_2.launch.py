@@ -16,8 +16,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip",
-            # default_value="192.168.188.200",
-            default_value="192.168.88.202",
+            default_value="192.168.88.110",
             description="IP address to the robot controller's RWS server",
         )
     )
@@ -33,7 +32,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_nickname",
-            default_value="ROB_1", 
+            default_value="ROB_1",
             description="Arbitrary user nickname/identifier for the robot controller",
         )
     )
@@ -58,7 +57,7 @@ def generate_launch_description():
     node = Node(
         package="abb_rws_client",
         executable="rws_client",
-        name="rws_client",
+        name="rws_client2",
         output="screen",
         parameters=[
             {"robot_ip": robot_ip},
