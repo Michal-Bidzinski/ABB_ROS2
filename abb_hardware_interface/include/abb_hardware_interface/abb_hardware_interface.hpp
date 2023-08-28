@@ -76,6 +76,8 @@ private:
 
   // Store the state and commands for the robot(s)
   abb::robot::MotionData motion_data_;
+  bool first_joint_states_read;
+  std::string go_to_inital_position;
 };
 
 }  // namespace abb_hardware_interface

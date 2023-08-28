@@ -15,6 +15,8 @@
 
 #include <abb_hardware_interface/abb_hardware_interface.hpp>
 #include <abb_hardware_interface/utilities.hpp>
+#include <chrono>
+#include <thread>
 
 using namespace std::chrono_literals;
 
@@ -34,6 +36,11 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
   const auto rws_port = stoi(info_.hardware_parameters["rws_port"]);
   const auto rws_ip = info_.hardware_parameters["rws_ip"];
   const auto prefix = info_.hardware_parameters["prefix"];
+  go_to_inital_position = info_.hardware_parameters["go_to_inital_position"];
+  first_joint_states_read = false;
+
+  RCLCPP_INFO_STREAM(LOGGER,
+                        "go_to_inital_position " << go_to_inital_position << typeid(go_to_inital_position).name());
 
   if (rws_ip == "None")
   {
@@ -118,8 +125,6 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
     initial_joint_values.push_back(std::move(initial_value));
   }
 
-  
-
   // Configure EGM
   RCLCPP_INFO(LOGGER, "Configuring EGM interface...");
 
@@ -164,6 +169,8 @@ CallbackReturn ABBSystemHardware::on_init(const hardware_interface::HardwareInfo
     RCLCPP_ERROR_STREAM(LOGGER, "Failed to initialize EGM connection");
     return CallbackReturn::ERROR;
   }
+
+  egm_manager_->read(motion_data_);
 
   return CallbackReturn::SUCCESS;
 }
@@ -235,6 +242,24 @@ CallbackReturn ABBSystemHardware::on_activate(const rclcpp_lifecycle::State& /* 
 
   egm_manager_->read(motion_data_);
 
+
+  if(!first_joint_states_read && go_to_inital_position == "False")
+  {
+    for (auto& group : motion_data_.groups)
+    {
+      for (auto& unit : group.units)
+      {
+        for (auto& joint : unit.joints)
+        {
+          joint.command.position = joint.state.position;
+        }
+      }
+    }
+  }
+
+  first_joint_states_read = true;
+
+
   RCLCPP_INFO(LOGGER, "ros2_control hardware interface was successfully started!");
   // return return_type::OK;
   // }
@@ -244,12 +269,16 @@ CallbackReturn ABBSystemHardware::on_activate(const rclcpp_lifecycle::State& /* 
 return_type ABBSystemHardware::read(const rclcpp::Time& time, const rclcpp::Duration& period)
 {
   egm_manager_->read(motion_data_);
+
   return return_type::OK;
 }
 
 return_type ABBSystemHardware::write(const rclcpp::Time& time, const rclcpp::Duration& period)
 {
-  egm_manager_->write(motion_data_);
+  if(first_joint_states_read)
+  {
+    egm_manager_->write(motion_data_);
+  }
   return return_type::OK;
 }
 
